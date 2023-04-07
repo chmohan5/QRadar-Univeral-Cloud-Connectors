@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Workflow name="Airlock Cloud Security" version="1.0" xmlns="http://qradar.ibm.com/UniversalCloudRESTAPI/Workflow/V1">
+
+    <Parameters>
+        <Parameter name="apiUrl" label="Airlock-API-URL" required="true" />
+        <Parameter name="apiKey" label="Airlock-API-Key" required="true" secret="true" />
+    </Parameters>
+
+    <Actions>
+        <!-- Initialize both the checkpoints for execution and server activity events -->
+        <Initialize path="/exec_history/exec-checkpoint" value="" />     <!-- Initial checkpoint will be blank for execution history events -->
+        <Initialize path="/svr_activity/svr-checkpoint" value="" />     <!-- Initial checkpoint will be blank for server activity events -->
+
+        <!-- Calling endpoint for execution history -->
+        <CallEndpoint url="https://${/apiUrl}:3129/v1/logging/exechistories" method="POST" savePath="/exec_history/response">
+            <SSLConfiguration allowUntrustedServerCertificate="true" />
+            <RequestHeader name="X-ApiKey" value="${/apiKey }" />
+            <RequestHeader name="Accept" value="application/json" />
+            <RequestBody type="application/json" encoding="UTF-8">{ "checkpoint": "${/exec_history/exec-checkpoint}" }</RequestBody>
+        </CallEndpoint>
+
+        <!-- Calling endpoint for server activity -->
+        <CallEndpoint url="https://${/apiUrl}:3129/v1/logging/svractivities" method="POST" savePath="/svr_activity/response">
+            <SSLConfiguration allowUntrustedServerCertificate="true" />
+            <RequestHeader name="X-ApiKey" value="${/apiKey }" />
+            <RequestHeader name="Accept" value="application/json" />
+            <RequestBody type="application/json" encoding="UTF-8">{ "checkpoint": "${/svr_activity/svr-checkpoint}" }</RequestBody>
+        </CallEndpoint>
+
+        <!-- Processing of execution history events -->
+        <!-- Check the response length if greater than zero then process -->
+        <If condition="count(/exec_history/response/body/response/exechistories) > 0" >
+            <!-- Post events to event pipeline -->
+            <PostEvents path="/exec_history/response/body/response/exechistories" source="${/apiUrl}" />
+            
+            <!-- get the array length below -->
+            <Set path="/exec_history/length" value="${count(/exec_history/response/body/response/exechistories) - 1}" />
+            <Log type="DEBUG" message="execution history response array length is : ${/exec_history/length}" />
+            
+            <!-- update the checkpoint value for the next poll and it will be the last element checkpoint -->
+            <Set path="/exec_history/exec-checkpoint" value="${/exec_history/response/body/response/exechistories[${/exec_history/length}]/checkpoint}" />
+            <Log type="DEBUG" message="execution checkpoint value being set to : ${/exec_history/response/body/response/exechistories[${/exec_history/length}]/checkpoint}" />
+        </If>
+        <Else>
+            <!-- no need to update checkpoint -->
+            <Log type="DEBUG" message="Execution History response is empty array, no need to update checkpoint" />
+        </Else>
+
+        <!-- ############################################################## -->
+        <!-- Processing of server activity events -->
+        <!-- Check the response length if greater than zero then process -->
+        <If condition="count(/svr_activity/response/body/response/svractivities) > 0" >
+            <!-- Post events to event pipeline -->
+            <PostEvents path="/svr_activity/response/body/response/svractivities" source="${/apiUrl}" />
+            
+            <!-- get the array length below -->
+            <Set path="/svr_activity/length" value="${count(/svr_activity/response/body/response/svractivities) - 1}" />
+            <Log type="DEBUG" message="server activity response array length is : ${/svr_activity/length}" />
+            
+            <!-- update the checkpoint value for the next poll and it will be the last element checkpoint -->
+            <Set path="/svr_activity/svr-checkpoint" value="${/svr_activity/response/body/response/svractivities[${/svr_activity/length}]/checkpoint}" />
+            <Log type="DEBUG" message="server activity checkpoint value being set to : ${/svr_activity/response/body/response/svractivities[${/svr_activity/length}]/checkpoint}" />
+        </If>
+        <Else>
+            <!-- no need to update checkpoint -->
+            <Log type="DEBUG" message="Server Activity response is empty array, no need to update checkpoint" />
+        </Else>
+    </Actions>
+
+    <Tests>
+        <DNSResolutionTest host="${/apiUrl}" />
+        <TCPConnectionTest host="${/apiUrl}" />
+        <HTTPConnectionThroughProxyTest url="https://${/apiUrl}" />
+    </Tests>
+
+</Workflow>
