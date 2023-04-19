@@ -24,7 +24,7 @@
             </Payload>
             <Secret value="${/client_secret}" />
         </CreateJWTAccessToken>
-
+        <Log type="DEBUG" message="JWT Token : ${/jwt_access_token}" />
     </Actions>
 
     <Tests>
