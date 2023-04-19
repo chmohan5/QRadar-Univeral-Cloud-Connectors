@@ -19,7 +19,7 @@
                 <Value name="iss" value="${/client_id}" />
                 <Value name="aud" value="https://add-authorization-url-here" />
                 <Value name="sub" value="${/client_id}" />
-                <Value name="jti" value="${time()}${time()}" />
+                <Value name="jti" value="${time()}" />
                 <Value name="exp" value="${time() / 1000 + 30}" />
             </Payload>
             <Secret value="${/client_secret}" />
