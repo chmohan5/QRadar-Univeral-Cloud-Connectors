@@ -3,7 +3,5 @@
     <Value name="host"          value="" />
     <Value name="client_id"     value="" />
     <Value name="client_secret" value="" />
-    <Value name="key_id"        value="" />
     <Value name="enterprise_id" value="" />
-    <Value name="private_key"   value="" />
 </WorkflowParameterValues>
