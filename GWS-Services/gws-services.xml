@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Workflow name="Box" version="1.0" xmlns="http://qradar.ibm.com/UniversalCloudRESTAPI/Workflow/V1">
+
+    <Parameters>
+        <Parameter name="host" label="Host" required="true" />
+        <Parameter name="client_id" label="Client ID" required="true" />
+        <Parameter name="client_secret" label="Client Secret" required="true" secret="true" />
+        <Parameter name="key_id" label="Key ID" required="true" />
+        <Parameter name="enterprise_id" label="Enterprise ID" required="true" />
+        <Parameter name="private_key" label="Private Key" required="true" secret="true" />
+    </Parameters>
+
+    <Actions>
+        <!-- Request JWT Token from Google API Server -->
+        <CreateJWTAccessToken savePath="/jwt_access_token">
+            <Header>
+                <Value name="alg" value="HS256" />
+                <Value name="typ" value="JWT" />
+                <Value name="kid" value="${/key_id}" />
+            </Header>
+            <Payload>
+                <Value name="iss" value="${/client_id}" />
+                <Value name="aud" value="https://add-authorization-url-here" />
+                <Value name="sub" value="${/client_id}" />
+                <Value name="jti" value="${time()}${time()}" />
+                <Value name="exp" value="${time() / 1000 + 30}" />
+            </Payload>
+            <Secret value="${/client_secret}" />
+        </CreateJWTAccessToken>
+
+    </Actions>
+
+    <Tests>
+        <DNSResolutionTest host="${/host}" />
+        <TCPConnectionTest host="${/host}" />
+        <SSLHandshakeTest host="${/host}" />
+        <HTTPConnectionThroughProxyTest url="https://${/host}" />
+    </Tests>
+
+</Workflow>
