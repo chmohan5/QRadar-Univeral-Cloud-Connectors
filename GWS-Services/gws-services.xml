@@ -2,7 +2,8 @@
 <Workflow name="Box" version="1.0" xmlns="http://qradar.ibm.com/UniversalCloudRESTAPI/Workflow/V1">
 
     <Parameters>
-        <Parameter name="host" label="Host" required="true" />
+        <Parameter name="auth_host" label="Authentication Host" required="true" />
+        <Parameter name="token_host" label="Token Host" required="true" />
         <Parameter name="client_id" label="Client ID" required="true" />
         <Parameter name="client_secret" label="Client Secret" required="true" secret="true" />
         <Parameter name="enterprise_id" label="Enterprise ID" required="true" />
@@ -17,7 +18,7 @@
             </Header>
             <Payload>
                 <Value name="iss" value="${/client_id}" />
-                <Value name="aud" value="https://add-authorization-url-here" />
+                <Value name="aud" value="https://${/auth_host}/o/oauth2/auth" />
                 <Value name="sub" value="${/client_id}" />
                 <Value name="jti" value="${time()}" />
                 <Value name="exp" value="${time() / 1000 + 30}" />
@@ -25,6 +26,14 @@
             <Secret value="${/client_secret}" />
         </CreateJWTAccessToken>
         <Log type="DEBUG" message="JWT Token : ${/jwt_access_token}" />
+
+        <!-- Request a refresh token / access token from token_uri -->
+        <CallEndpoint url="https://${/token_host}/oauth2/token" method="POST" savePath="/get_oauth_token" >
+            <UrlEncodedFormRequestBody>
+                
+            </UrlEncodedFormRequestBody>
+        </CallEndpoint>
+
     </Actions>
 
     <Tests>

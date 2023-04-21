@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <WorkflowParameterValues xmlns="http://qradar.ibm.com/UniversalCloudRESTAPI/WorkflowParameterValues/V1">
-    <Value name="host"          value="" />
-    <Value name="client_id"     value="" />
-    <Value name="client_secret" value="" />
-    <Value name="enterprise_id" value="" />
+    <Value name="auth_host"          value="accounts.google.com" />
+    <Value name="token_host"          value="oauth2.googleapis.com" />
+    <Value name="client_id"     value="add-client-id-here" />
+    <Value name="client_secret" value="add-client-secret-here" />
+    <Value name="enterprise_id" value="add-enterprise-id-here" />
 </WorkflowParameterValues>
