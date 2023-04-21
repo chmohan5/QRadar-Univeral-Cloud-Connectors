@@ -20,6 +20,8 @@
                 <Value name="iss" value="${/client_id}" />
                 <Value name="aud" value="https://${/auth_host}/o/oauth2/auth" />
                 <Value name="sub" value="${/client_id}" />
+                <!-- Below scope is just for Google Drive Activity read only -->
+                <Value name="scope" value="https://www.googleapis.com/auth/drive.activity.readonly" />
                 <Value name="jti" value="${time()}" />
                 <Value name="exp" value="${time() / 1000 + 30}" />
             </Payload>
@@ -28,11 +30,17 @@
         <Log type="DEBUG" message="JWT Token : ${/jwt_access_token}" />
 
         <!-- Request a refresh token / access token from token_uri -->
-        <CallEndpoint url="https://${/token_host}/oauth2/token" method="POST" savePath="/get_oauth_token" >
+        <CallEndpoint url="https://${/token_host}/oauth2/token" method="POST" savePath="/oauth_access_token" >
             <UrlEncodedFormRequestBody>
-                
+                <Parameter name="grant_type" value="urn:ietf:params:oauth:grant-type:jwt-bearer" />
+                <Parameter name="client_id" value="${/client_id}" />
+                <Parameter name="client_secret" value="${/client_secret}" />
+                <Parameter name="assertion" value="${/jwt_access_token}" />
             </UrlEncodedFormRequestBody>
         </CallEndpoint>
+        <Log type="DEBUG" message="OAuth Access Token : ${/oauth_access_token}" />
+
+        <!-- Error Handling : Add your code below -->
 
     </Actions>
 
