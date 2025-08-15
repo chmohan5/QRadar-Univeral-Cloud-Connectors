@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow name="AbsoluteSecurity" version="1.0" minimumRecurrence="1" xmlns="http://qradar.ibm.com/UniversalCloudRESTAPI/Workflow/V2">
+    <Parameters>
+        <Parameter name="api_host" label="Absolute API Host" required="true" />
+        <Parameter name="token_id" label="Absolute API Token ID" required="true" />
+        <Parameter name="secret_key" label="Absolute API Secret Key" required="true" secret="true" />
+        <Parameter name="siem_endpoint" label="SIEM API Endpoint" required="true" value="/v2/siem/events" />
+    </Parameters>
+
+    <Actions>
+        <Log type="INFO" message="Starting Absolute Security SIEM events collection." />
+
+        <Set path="/absolute/fromDate" value="${/state/last_run_time_utc ? /state/last_run_time_utc : time() - 3600000}" />
+        <Set path="/absolute/toDate" value="${time()}" />
+        <Log type="INFO" message="Querying events from ${/absolute/fromDate} to ${/absolute/toDate}" />
+        
+        <ParseDate pattern="yyyyMMdd'T'HHmmss'Z'" date="${/absolute/toDate}" timeZone="UTC" savePath="/absolute/amz_date" />
+        <Set path="/absolute/canonical_headers" value="host:${/api_host}\nx-amz-date:${/absolute/amz_date}\n" />
+        <Set path="/absolute/signed_headers" value="host;x-amz-date" />
+
+        <UrlEncode path="/absolute/canonical_query_string" value="fromDate=${/absolute/fromDate}&amp;toDate=${/absolute/toDate}" />
+        <Set path="/absolute/canonical_request" value="GET\n${/siem_endpoint}\n${/absolute/canonical_query_string}\n${/absolute/canonical_headers}\n${/absolute/signed_headers}\n${sha256('')}" />
+        
+        <Set path="/absolute/string_to_sign" value="AWS4-HMAC-SHA256\n${/absolute/amz_date}\nabsoluterequest\n${sha256(/absolute/canonical_request)}" />
+        
+        <Set path="/absolute/signature" value="${hmac_sha256_hex(/secret_key, /absolute/string_to_sign)}" />
+        
+        <Set path="/absolute/authorization_header" value="AWS4-HMAC-SHA256 Credential=${/token_id}/absoluterequest, SignedHeaders=${/absolute/signed_headers}, Signature=${/absolute/signature}" />
+        
+        <CallEndpoint url="https://${/api_host}${/siem_endpoint}" method="GET" savePath="/absolute/response">
+            <RequestHeader name="x-amz-date" value="${/absolute/amz_date}" />
+            <RequestHeader name="Authorization" value="${/absolute/authorization_header}" />
+            <QueryParameter name="fromDate" value="${date_format(/absolute/fromDate, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'UTC')}" />
+            <QueryParameter name="toDate" value="${date_format(/absolute/toDate, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'UTC')}" />
+        </CallEndpoint>
+
+        <Log type="INFO" message="Received ${/absolute/response/body/events?length()} events from Absolute Security." />
+        
+        <PostEvents path="/absolute/response/body/events" source="${/api_host}" />
+        
+        <Set path="/state/last_run_time_utc" value="${/absolute/toDate}" />
+        
+        <SetStatus type="INFO" message="Successfully finished Absolute Security SIEM events collection." />
+
+    </Actions>
+</Workflow>
