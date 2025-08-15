@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WorkflowParameterValues xmlns="http://qradar.ibm.com/UniversalCloudRESTAPI/WorkflowParameterValues/V2">
+    <Value name="api_host" value="api.absolute.com" />
+    
+    <Value name="token_id" value="your_absolute_api_token_id" />
+    
+    <Value name="secret_key" value="your_absolute_api_secret_key" />
+</WorkflowParameterValues>
