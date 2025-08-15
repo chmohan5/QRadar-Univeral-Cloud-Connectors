@@ -18,7 +18,7 @@
         <Set path="/absolute/canonical_headers" value="host:${/api_host}\nx-amz-date:${/absolute/amz_date}\n" />
         <Set path="/absolute/signed_headers" value="host;x-amz-date" />
 
-        <Set path="/absolute/canonical_query_string" value="${url_encode('fromDate=' + date_format(/absolute/fromDate, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'UTC') + '&toDate=' + date_format(/absolute/toDate, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'UTC'))}" />
+        <Set path="/absolute/canonical_query_string" value="${url_encode('fromDate=' + date_format(/absolute/fromDate, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'UTC') + '&amp;toDate=' + date_format(/absolute/toDate, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'UTC'))}" />
         <Set path="/absolute/canonical_request" value="GET\n${/siem_endpoint}\n${/absolute/canonical_query_string}\n${/absolute/canonical_headers}\n${/absolute/signed_headers}\n${sha256('')}" />
         
         <Set path="/absolute/string_to_sign" value="AWS4-HMAC-SHA256\n${/absolute/amz_date}\nabsoluterequest\n${sha256(/absolute/canonical_request)}" />
